@@ -1,1 +1,134 @@
-hello
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <title>股票持仓比例提醒</title>
+    <style>
+        /* 自定义样式 */
+        .highlight {
+            background-color: #ffcccc;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 font-sans">
+    <div id="app" class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-4 text-center">股票持仓比例提醒</h1>
+        <div class="bg-white p-6 rounded shadow-md">
+            <form @submit.prevent="addOrUpdateStock">
+                <div class="mb-4">
+                    <label for="stockName" class="block text-gray-700 font-bold mb-2">股票名称</label>
+                    <input type="text" v-model="newStock.name" id="stockName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入股票名称">
+                </div>
+                <div class="mb-4">
+                    <label for="quantity" class="block text-gray-700 font-bold mb-2">持仓数量</label>
+                    <input type="number" v-model="newStock.quantity" id="quantity" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入持仓数量">
+                </div>
+                <div class="mb-4">
+                    <label for="price" class="block text-gray-700 font-bold mb-2">持仓价格</label>
+                    <input type="number" v-model="newStock.price" id="price" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入持仓价格">
+                </div>
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    {{ editingIndex!== -1? '保存修改' : '添加股票' }}
+                </button>
+            </form>
+        </div>
+        <div class="mt-6 bg-white p-6 rounded shadow-md">
+            <h2 class="text-xl font-bold mb-4">持仓列表</h2>
+            <table class="w-full table-auto">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2">股票名称</th>
+                        <th class="px-4 py-2">持仓数量</th>
+                        <th class="px-4 py-2">持仓价格</th>
+                        <th class="px-4 py-2">持仓价值</th>
+                        <th class="px-4 py-2">持仓比例</th>
+                        <th class="px-4 py-2">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(stock, index) in stocks" :key="index" :class="{ highlight: stock.percentage > 0.3 }">
+                        <td class="border px-4 py-2">{{ stock.name }}</td>
+                        <td class="border px-4 py-2">{{ stock.quantity }}</td>
+                        <td class="border px-4 py-2">{{ stock.price }}</td>
+                        <td class="border px-4 py-2">{{ stock.value }}</td>
+                        <td class="border px-4 py-2">{{ (stock.percentage * 100).toFixed(2) }}%</td>
+                        <td class="border px-4 py-2">
+                            <button @click="editStock(index)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">修改</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    newStock: {
+                        name: '',
+                        quantity: 0,
+                        price: 0
+                    },
+                    stocks: [],
+                    editingIndex: -1
+                };
+            },
+            methods: {
+                addOrUpdateStock() {
+                    const { name, quantity, price } = this.newStock;
+                    if (name && quantity > 0 && price > 0) {
+                        const value = quantity * price;
+                        if (this.editingIndex!== -1) {
+                            this.stocks[this.editingIndex] = {
+                                name,
+                                quantity,
+                                price,
+                                value
+                            };
+                            this.editingIndex = -1;
+                        } else {
+                            this.stocks.push({
+                                name,
+                                quantity,
+                                price,
+                                value
+                            });
+                        }
+                        this.calculatePercentages();
+                        this.newStock = {
+                            name: '',
+                            quantity: 0,
+                            price: 0
+                        };
+                    }
+                },
+                calculatePercentages() {
+                    const totalValue = this.stocks.reduce((sum, stock) => sum + stock.value, 0);
+                    this.stocks.forEach(stock => {
+                        stock.percentage = stock.value / totalValue;
+                    });
+                },
+                editStock(index) {
+                    this.editingIndex = index;
+                    const stock = this.stocks[index];
+                    this.newStock = {
+                        name: stock.name,
+                        quantity: stock.quantity,
+                        price: stock.price
+                    };
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>
+    
