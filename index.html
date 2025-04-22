@@ -31,7 +31,7 @@
                 </div>
                 <div class="mb-4">
                     <label for="price" class="block text-gray-700 font-bold mb-2">持仓价格</label>
-                    <input type="number" v-model="newStock.price" id="price" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入持仓价格">
+                    <input type="number" v-model="newStock.price" id="price" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入持仓价格" min="0" max="10000">
                 </div>
                 <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                     {{ editingIndex!== -1? '保存修改' : '添加股票' }}
@@ -84,7 +84,7 @@
             methods: {
                 addOrUpdateStock() {
                     const { name, quantity, price } = this.newStock;
-                    if (name && quantity > 0 && price > 0) {
+                    if (name && quantity > 0 && price >= 0 && price <= 10000) {
                         const value = quantity * price;
                         if (this.editingIndex!== -1) {
                             this.stocks[this.editingIndex] = {
