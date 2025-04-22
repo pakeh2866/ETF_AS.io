@@ -84,7 +84,7 @@
             methods: {
                 addOrUpdateStock() {
                     const { name, quantity, price } = this.newStock;
-                    if (name && quantity > 0 && price >= 0 && price <= 10000) {
+                    if (name && quantity > 0 && price >= 0.000 && price <= 10000.000) {
                         const value = quantity * price;
                         if (this.editingIndex!== -1) {
                             this.stocks[this.editingIndex] = {
