@@ -43,7 +43,17 @@
             </form>
         </div>
         <div class="mt-6 bg-white p-6 rounded shadow-md">
-            <h2 class="text-xl font-bold mb-4">持仓列表</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">持仓列表</h2>
+                <div class="space-x-2">
+                    <button @click="exportData" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        导出数据
+                    </button>
+                    <button @click="importData" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        导入数据
+                    </button>
+                </div>
+            </div>
             <table class="w-full table-auto">
                 <thead>
                     <tr>
@@ -89,11 +99,14 @@
                         price: 0,
                         currentPrice: 0
                     },
-                    stocks: [],
+                    stocks: JSON.parse(localStorage.getItem('stocks')) || [],
                     editingIndex: -1
                 };
             },
             methods: {
+                saveToLocalStorage() {
+                    localStorage.setItem('stocks', JSON.stringify(this.stocks));
+                },
                 addOrUpdateStock() {
                     const { code, name, quantity, price, currentPrice } = this.newStock;
                     if (code && name && quantity > 0 && price >= 0.000 && price <= 10000.000) {
@@ -119,6 +132,7 @@
                             });
                         }
                         this.calculatePercentages();
+                        this.saveToLocalStorage();
                         this.newStock = {
                             code: '',
                             name: '',
@@ -152,6 +166,7 @@
                         stock.quantity += quantity;
                         stock.value = stock.quantity * stock.price;
                         this.calculatePercentages();
+                        this.saveToLocalStorage();
                     }
                 },
                 sellStock(index) {
@@ -161,9 +176,50 @@
                         stock.quantity -= quantity;
                         stock.value = stock.quantity * stock.price;
                         this.calculatePercentages();
+                        this.saveToLocalStorage();
                     } else if (quantity > stock.quantity) {
                         alert('卖出数量不能大于持仓数量！');
                     }
+                },
+                exportData() {
+                    const data = JSON.stringify(this.stocks, null, 2);
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `stock_portfolio_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                },
+                importData() {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.json';
+                    input.onchange = (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                                try {
+                                    const importedData = JSON.parse(event.target.result);
+                                    if (Array.isArray(importedData)) {
+                                        this.stocks = importedData;
+                                        this.calculatePercentages();
+                                        this.saveToLocalStorage();
+                                        alert('数据导入成功！');
+                                    } else {
+                                        alert('导入的数据格式不正确！');
+                                    }
+                                } catch (error) {
+                                    alert('导入失败：文件格式错误！');
+                                }
+                            };
+                            reader.readAsText(file);
+                        }
+                    };
+                    input.click();
                 }
             }
         }).mount('#app');
