@@ -22,6 +22,10 @@
         <div class="bg-white p-6 rounded shadow-md">
             <form @submit.prevent="addOrUpdateStock">
                 <div class="mb-4">
+                    <label for="stockCode" class="block text-gray-700 font-bold mb-2">股票代码</label>
+                    <input type="text" v-model="newStock.code" id="stockCode" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入股票代码">
+                </div>
+                <div class="mb-4">
                     <label for="stockName" class="block text-gray-700 font-bold mb-2">股票名称</label>
                     <input type="text" v-model="newStock.name" id="stockName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入股票名称">
                 </div>
@@ -31,7 +35,7 @@
                 </div>
                 <div class="mb-4">
                     <label for="price" class="block text-gray-700 font-bold mb-2">持仓价格</label>
-                    <input type="number" v-model="newStock.price" id="price" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入持仓价格" min="0" max="10000">
+                    <input type="number" v-model="newStock.price" id="price" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入持仓价格" min="0" max="10000" step="0.001">
                 </div>
                 <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                     {{ editingIndex!== -1? '保存修改' : '添加股票' }}
@@ -43,9 +47,11 @@
             <table class="w-full table-auto">
                 <thead>
                     <tr>
+                        <th class="px-4 py-2">股票代码</th>
                         <th class="px-4 py-2">股票名称</th>
                         <th class="px-4 py-2">持仓数量</th>
                         <th class="px-4 py-2">持仓价格</th>
+                        <th class="px-4 py-2">现价</th>
                         <th class="px-4 py-2">持仓价值</th>
                         <th class="px-4 py-2">持仓比例</th>
                         <th class="px-4 py-2">操作</th>
@@ -53,13 +59,17 @@
                 </thead>
                 <tbody>
                     <tr v-for="(stock, index) in stocks" :key="index" :class="{ highlight: stock.percentage > 0.3 }">
+                        <td class="border px-4 py-2">{{ stock.code }}</td>
                         <td class="border px-4 py-2">{{ stock.name }}</td>
                         <td class="border px-4 py-2">{{ stock.quantity }}</td>
                         <td class="border px-4 py-2">{{ stock.price }}</td>
+                        <td class="border px-4 py-2">{{ stock.currentPrice }}</td>
                         <td class="border px-4 py-2">{{ stock.value }}</td>
                         <td class="border px-4 py-2">{{ (stock.percentage * 100).toFixed(2) }}%</td>
                         <td class="border px-4 py-2">
                             <button @click="editStock(index)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">修改</button>
+                            <button @click="buyStock(index)" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline ml-2">买入</button>
+                            <button @click="sellStock(index)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline ml-2">卖出</button>
                         </td>
                     </tr>
                 </tbody>
@@ -73,9 +83,11 @@
             data() {
                 return {
                     newStock: {
+                        code: '',
                         name: '',
                         quantity: 0,
-                        price: 0
+                        price: 0,
+                        currentPrice: 0
                     },
                     stocks: [],
                     editingIndex: -1
@@ -83,30 +95,36 @@
             },
             methods: {
                 addOrUpdateStock() {
-                    const { name, quantity, price } = this.newStock;
-                    if (name && quantity > 0 && price >= 0.000 && price <= 10000.000) {
+                    const { code, name, quantity, price, currentPrice } = this.newStock;
+                    if (code && name && quantity > 0 && price >= 0.000 && price <= 10000.000) {
                         const value = quantity * price;
-                        if (this.editingIndex!== -1) {
+                        if (this.editingIndex !== -1) {
                             this.stocks[this.editingIndex] = {
+                                code,
                                 name,
                                 quantity,
                                 price,
+                                currentPrice,
                                 value
                             };
                             this.editingIndex = -1;
                         } else {
                             this.stocks.push({
+                                code,
                                 name,
                                 quantity,
                                 price,
+                                currentPrice,
                                 value
                             });
                         }
                         this.calculatePercentages();
                         this.newStock = {
+                            code: '',
                             name: '',
                             quantity: 0,
-                            price: 0
+                            price: 0,
+                            currentPrice: 0
                         };
                     }
                 },
@@ -120,10 +138,32 @@
                     this.editingIndex = index;
                     const stock = this.stocks[index];
                     this.newStock = {
+                        code: stock.code,
                         name: stock.name,
                         quantity: stock.quantity,
-                        price: stock.price
+                        price: stock.price,
+                        currentPrice: stock.currentPrice
                     };
+                },
+                buyStock(index) {
+                    const stock = this.stocks[index];
+                    const quantity = parseInt(prompt(`请输入要买入的${stock.name}数量：`));
+                    if (quantity && quantity > 0) {
+                        stock.quantity += quantity;
+                        stock.value = stock.quantity * stock.price;
+                        this.calculatePercentages();
+                    }
+                },
+                sellStock(index) {
+                    const stock = this.stocks[index];
+                    const quantity = parseInt(prompt(`请输入要卖出的${stock.name}数量：`));
+                    if (quantity && quantity > 0 && quantity <= stock.quantity) {
+                        stock.quantity -= quantity;
+                        stock.value = stock.quantity * stock.price;
+                        this.calculatePercentages();
+                    } else if (quantity > stock.quantity) {
+                        alert('卖出数量不能大于持仓数量！');
+                    }
                 }
             }
         }).mount('#app');
