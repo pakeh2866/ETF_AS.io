@@ -180,7 +180,7 @@
                         stock.value = stock.quantity * stock.price;
                         this.calculatePercentages();
                         this.saveToLocalStorage();
-                    } else if (quantity > stock.quantity) {
+                    } else if (quantity >= stock.quantity) {
                         alert('卖出数量不能大于持仓数量！');
                     }
                 },
@@ -226,50 +226,69 @@
                 },
                 async updateStockPrices() {
                     try {
-                        // 构建股票代码列表
-                        const symbols = this.stocks.map(stock => stock.code).join(',');
-                        console.log('请求的股票代码:', symbols);
+                        if (this.stocks.length === 0) {
+                            console.log('持仓列表为空，无需更新行情。');
+                            return;
+                        }
 
-                        const response = await fetch(`https://qt.gtimg.cn/q=${symbols}`);
-                        
+                        // 直接使用您提供的包含前缀的股票代码
+                        const querySymbols = this.stocks.map(stock => stock.code.trim()).join(',');
+
+                        console.log('请求的腾讯接口代码:', querySymbols);
+
+                        // 检查 querySymbols 是否为空，以防所有代码都是无效的或被过滤掉
+                        if (!querySymbols) {
+                             console.log('没有有效的股票代码可供查询。');
+                             return;
+                        }
+
+
+                        const response = await fetch(`https://qt.gtimg.cn/q=${querySymbols}`);
+                        console.log('请求的股票数据URL:', `https://qt.gtimg.cn/q=${querySymbols}`);
                         const text = await response.text();
-                        console.log('返回的数据:', text);
-                        
-                        // 分割数据
-                        const stockData = text.split('~');
-                        console.log('分割后的数据:', stockData);
-                        
-                        // 输出每个字段的含义
-                        const fields = [
-                            '股票名称',
-                            '乱码',
-                            '股票代码',
-                            '当前价格',
-                            '昨收价',
-                            '今开价',
-                            '未知',
-                            '未知',
-                            '未知'
-                        ];
-                        
-                        stockData.forEach((value, index) => {
-                            if (index < fields.length) {
-                                console.log(`${fields[index]}: ${value}`);
+                        console.log('返回的原始数据:', text);
+
+                        // 按分号分割每个股票的数据
+                        const individualStockData = text.trim().split(';').filter(s => s.length > 0);
+                        console.log('分割后的单个股票数据:', individualStockData);
+
+                        individualStockData.forEach(stockStr => {
+                            // 提取股票代码 (例如 v_sh600000=...)
+                            const stockCodeWithPrefixMatch = stockStr.match(/v_([a-z]{2}\d+)=/);
+                            if (!stockCodeWithPrefixMatch) {
+                                console.warn(`无法从 "${stockStr}" 中提取股票代码`);
+                                return; // 跳过此条数据
+                            }
+                            const stockCodeWithPrefix = stockCodeWithPrefixMatch[1]; // 例如 sh600000
+
+                            // 按波浪号分割字段
+                            const fields = stockStr.split('~');
+                            if (fields.length > 3) { // 确保有足够的数据字段
+                                const currentPriceStr = fields[3]; // 当前价格字符串在第4个位置 (索引3)
+                                const currentPrice = parseFloat(currentPriceStr);
+                                const stockName = fields[1]; // 股票名称在第2个位置 (索引1)
+
+                                console.log(`处理: ${stockCodeWithPrefix}, 名称: ${stockName}, 现价字符串: "${currentPriceStr}"`);
+
+                                if (!isNaN(currentPrice) && currentPriceStr.trim() !== '') {
+                                    // 使用包含前缀的代码进行匹配
+                                    const stock = this.stocks.find(s => s.code === stockCodeWithPrefix);
+                                    if (stock) {
+                                        stock.currentPrice = currentPrice;
+                                        stock.value = stock.quantity * currentPrice; // 使用现价计算价值
+                                        console.log(`成功更新 ${stock.name} (${stockCodeWithPrefix}) 现价为: ${currentPrice}`);
+                                    } else {
+                                        console.warn(`未在持仓列表中找到代码为 ${stockCodeWithPrefix} 的股票`);
+                                    }
+                                } else {
+                                    console.warn(`无法解析 ${stockName} (${stockCodeWithPrefix}) 的现价: "${currentPriceStr}"`);
+                                }
+                            } else {
+                                console.warn(`数据格式不完整或字段不足: ${stockStr}`);
                             }
                         });
 
-                        // 更新股票现价
-                        const currentPrice = parseFloat(stockData[3]); // 当前价格在第4个位置
-                        if (!isNaN(currentPrice)) {
-                            const stock = this.stocks.find(s => s.code === symbols);
-                            if (stock) {
-                                stock.currentPrice = currentPrice;
-                                stock.value = stock.quantity * currentPrice;
-                                console.log(`更新${stock.name}现价为: ${currentPrice}`);
-                            }
-                        }
-
-                        this.calculatePercentages();
+                        this.calculatePercentages(); // 重新计算比例
                         this.saveToLocalStorage();
                         alert('股票数据更新完成！');
                     } catch (error) {
