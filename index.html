@@ -384,6 +384,8 @@
                                 stock.value = stock.quantity * 1;
                             }
                         });
+                        this.calculatePercentages();
+                        this.saveToLocalStorage();
                     } catch (error) {
                         console.error('获取股票数据失败:', error);
                         alert('获取股票数据失败，请稍后重试！\n可能原因：\n1. 网络连接问题\n2. 股票代码格式不正确\n3. 服务器暂时不可用');
