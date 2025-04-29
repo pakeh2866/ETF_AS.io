@@ -77,7 +77,7 @@
                         <td class="border px-4 py-2">{{ stock.quantity }}</td>
                         <td class="border px-4 py-2">{{ stock.price }}</td>
                         <td class="border px-4 py-2">{{ stock.currentPrice }}</td>
-                        <td class="border px-4 py-2">{{ stock.value }}</td>
+                        <td class="border px-4 py-2">{{ stock.value.toFixed(2) }} </td>
                         <td class="border px-4 py-2">{{ (stock.percentage * 100).toFixed(2) }}%</td>
                         <td class="border px-4 py-2">
                             <button @click="editStock(index)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">修改</button>
