@@ -191,6 +191,9 @@
                 },
                 addOrUpdateStock() {
                     const { code, name, quantity, price, currentPrice, category } = this.newStock;
+                    if (name === '现金') {
+                        currentPrice = 1;
+                    }
                     if (code && name && quantity > 0 && price >= 0.000 && price <= 10000.000) {
                         const value = quantity * price;
                         if (this.editingIndex !== -1) {
@@ -373,6 +376,14 @@
                         this.calculatePercentages(); // 重新计算比例
                         this.saveToLocalStorage();
                         alert('股票数据更新完成！');
+
+                        // 保证现金现价为1
+                        this.stocks.forEach(stock => {
+                            if (stock.name === '现金') {
+                                stock.currentPrice = 1;
+                                stock.value = stock.quantity * 1;
+                            }
+                        });
                     } catch (error) {
                         console.error('获取股票数据失败:', error);
                         alert('获取股票数据失败，请稍后重试！\n可能原因：\n1. 网络连接问题\n2. 股票代码格式不正确\n3. 服务器暂时不可用');
