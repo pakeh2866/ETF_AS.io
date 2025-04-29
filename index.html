@@ -158,7 +158,7 @@
                         <td class="border px-4 py-2">{{ stock.value.toFixed(2) }} </td>
                         <td class="border px-4 py-2">{{ (stock.percentage * 100).toFixed(2) }}%</td>
                         <td class="border px-4 py-2">
-                            <button @click="editStock(index)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">修改</button>
+                            <button @click="editStock(stock)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">修改</button>
                         </td>
                     </tr>
                 </tbody>
@@ -233,9 +233,8 @@
                         stock.percentage = stock.value / totalValue;
                     });
                 },
-                editStock(index) {
-                    this.editingIndex = index;
-                    const stock = this.stocks[index];
+                editStock(stock) {
+                    this.editingIndex = this.stocks.indexOf(stock);
                     this.newStock = {
                         code: stock.code,
                         name: stock.name,
