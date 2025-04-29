@@ -72,19 +72,83 @@
             <table class="w-full table-auto">
                 <thead>
                     <tr>
-                        <th class="px-4 py-2">分类</th>
-                        <th class="px-4 py-2">股票代码</th>
-                        <th class="px-4 py-2">股票名称</th>
-                        <th class="px-4 py-2">持仓数量</th>
-                        <th class="px-4 py-2">持仓价格</th>
-                        <th class="px-4 py-2">现价</th>
-                        <th class="px-4 py-2">持仓价值</th>
-                        <th class="px-4 py-2">持仓比例</th>
+                        <th class="px-4 py-2 cursor-pointer select-none" @click="sortBy('category')">
+                            分类
+                            <span v-if="sortKey === 'category'">
+                                <span v-if="sortOrder === 'asc'">▲</span>
+                                <span v-else-if="sortOrder === 'desc'">▼</span>
+                                <span v-else>◇</span>
+                            </span>
+                            <span v-else>◇</span>
+                        </th>
+                        <th class="px-4 py-2 cursor-pointer select-none" @click="sortBy('code')">
+                            股票代码
+                            <span v-if="sortKey === 'code'">
+                                <span v-if="sortOrder === 'asc'">▲</span>
+                                <span v-else-if="sortOrder === 'desc'">▼</span>
+                                <span v-else>◇</span>
+                            </span>
+                            <span v-else>◇</span>
+                        </th>
+                        <th class="px-4 py-2 cursor-pointer select-none" @click="sortBy('name')">
+                            股票名称
+                            <span v-if="sortKey === 'name'">
+                                <span v-if="sortOrder === 'asc'">▲</span>
+                                <span v-else-if="sortOrder === 'desc'">▼</span>
+                                <span v-else>◇</span>
+                            </span>
+                            <span v-else>◇</span>
+                        </th>
+                        <th class="px-4 py-2 cursor-pointer select-none" @click="sortBy('quantity')">
+                            持仓数量
+                            <span v-if="sortKey === 'quantity'">
+                                <span v-if="sortOrder === 'asc'">▲</span>
+                                <span v-else-if="sortOrder === 'desc'">▼</span>
+                                <span v-else>◇</span>
+                            </span>
+                            <span v-else>◇</span>
+                        </th>
+                        <th class="px-4 py-2 cursor-pointer select-none" @click="sortBy('price')">
+                            持仓价格
+                            <span v-if="sortKey === 'price'">
+                                <span v-if="sortOrder === 'asc'">▲</span>
+                                <span v-else-if="sortOrder === 'desc'">▼</span>
+                                <span v-else>◇</span>
+                            </span>
+                            <span v-else>◇</span>
+                        </th>
+                        <th class="px-4 py-2 cursor-pointer select-none" @click="sortBy('currentPrice')">
+                            现价
+                            <span v-if="sortKey === 'currentPrice'">
+                                <span v-if="sortOrder === 'asc'">▲</span>
+                                <span v-else-if="sortOrder === 'desc'">▼</span>
+                                <span v-else>◇</span>
+                            </span>
+                            <span v-else>◇</span>
+                        </th>
+                        <th class="px-4 py-2 cursor-pointer select-none" @click="sortBy('value')">
+                            持仓价值
+                            <span v-if="sortKey === 'value'">
+                                <span v-if="sortOrder === 'asc'">▲</span>
+                                <span v-else-if="sortOrder === 'desc'">▼</span>
+                                <span v-else>◇</span>
+                            </span>
+                            <span v-else>◇</span>
+                        </th>
+                        <th class="px-4 py-2 cursor-pointer select-none" @click="sortBy('percentage')">
+                            持仓比例
+                            <span v-if="sortKey === 'percentage'">
+                                <span v-if="sortOrder === 'asc'">▲</span>
+                                <span v-else-if="sortOrder === 'desc'">▼</span>
+                                <span v-else>◇</span>
+                            </span>
+                            <span v-else>◇</span>
+                        </th>
                         <th class="px-4 py-2">操作</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(stock, index) in stocks" :key="index" :class="{ highlight: stock.percentage > 0.2 }">
+                    <tr v-for="(stock, index) in getSortedStocks()" :key="index" :class="{ highlight: stock.percentage > 0.2 }">
                         <td class="border px-4 py-2">{{ stock.category }}</td>
                         <td class="border px-4 py-2">{{ stock.code }}</td>
                         <td class="border px-4 py-2">{{ stock.name }}</td>
@@ -116,7 +180,9 @@
                         category: 'A股'
                     },
                     stocks: JSON.parse(localStorage.getItem('stocks')) || [],
-                    editingIndex: -1
+                    editingIndex: -1,
+                    sortKey: '',
+                    sortOrder: ''
                 };
             },
             methods: {
@@ -319,6 +385,41 @@
                     setInterval(() => {
                         this.updateStockPrices();
                     }, 14400000); // 4小时 = 4 * 60 * 60 * 1000毫秒
+                },
+                sortBy(key) {
+                    if (this.sortKey === key) {
+                        if (this.sortOrder === '') {
+                            this.sortOrder = 'asc';
+                        } else if (this.sortOrder === 'asc') {
+                            this.sortOrder = 'desc';
+                        } else {
+                            this.sortOrder = '';
+                        }
+                    } else {
+                        this.sortKey = key;
+                        this.sortOrder = 'asc';
+                    }
+                },
+                getSortedStocks() {
+                    if (!this.sortKey || this.sortOrder === '') {
+                        return this.stocks;
+                    }
+                    return [...this.stocks].sort((a, b) => {
+                        if (a[this.sortKey] === undefined || b[this.sortKey] === undefined) return 0;
+                        if (typeof a[this.sortKey] === 'string') {
+                            if (this.sortOrder === 'asc') {
+                                return a[this.sortKey].localeCompare(b[this.sortKey]);
+                            } else {
+                                return b[this.sortKey].localeCompare(a[this.sortKey]);
+                            }
+                        } else {
+                            if (this.sortOrder === 'asc') {
+                                return a[this.sortKey] - b[this.sortKey];
+                            } else {
+                                return b[this.sortKey] - a[this.sortKey];
+                            }
+                        }
+                    });
                 }
             },
             mounted() {
