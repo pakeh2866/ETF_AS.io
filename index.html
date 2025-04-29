@@ -22,6 +22,18 @@
         <div class="bg-white p-6 rounded shadow-md">
             <form @submit.prevent="addOrUpdateStock">
                 <div class="mb-4">
+                    <label for="stockCategory" class="block text-gray-700 font-bold mb-2">分类</label>
+                    <select v-model="newStock.category" id="stockCategory" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="A股">A股</option>
+                        <option value="港股">港股</option>
+                        <option value="其他海外">其他海外</option>
+                        <option value="国内债">国内债</option>
+                        <option value="黄金">黄金</option>
+                        <option value="石油">石油</option>
+                        <option value="现金">现金</option>
+                    </select>
+                </div>
+                <div class="mb-4">
                     <label for="stockCode" class="block text-gray-700 font-bold mb-2">股票代码</label>
                     <input type="text" v-model="newStock.code" id="stockCode" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入股票代码">
                 </div>
@@ -60,6 +72,7 @@
             <table class="w-full table-auto">
                 <thead>
                     <tr>
+                        <th class="px-4 py-2">分类</th>
                         <th class="px-4 py-2">股票代码</th>
                         <th class="px-4 py-2">股票名称</th>
                         <th class="px-4 py-2">持仓数量</th>
@@ -71,7 +84,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(stock, index) in stocks" :key="index" :class="{ highlight: stock.percentage > 0.3 }">
+                    <tr v-for="(stock, index) in stocks" :key="index" :class="{ highlight: stock.percentage > 0.2 }">
+                        <td class="border px-4 py-2">{{ stock.category }}</td>
                         <td class="border px-4 py-2">{{ stock.code }}</td>
                         <td class="border px-4 py-2">{{ stock.name }}</td>
                         <td class="border px-4 py-2">{{ stock.quantity }}</td>
@@ -81,8 +95,6 @@
                         <td class="border px-4 py-2">{{ (stock.percentage * 100).toFixed(2) }}%</td>
                         <td class="border px-4 py-2">
                             <button @click="editStock(index)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">修改</button>
-                            <button @click="buyStock(index)" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline ml-2">买入</button>
-                            <button @click="sellStock(index)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline ml-2">卖出</button>
                         </td>
                     </tr>
                 </tbody>
@@ -100,7 +112,8 @@
                         name: '',
                         quantity: 0,
                         price: 0,
-                        currentPrice: 0
+                        currentPrice: 0,
+                        category: 'A股'
                     },
                     stocks: JSON.parse(localStorage.getItem('stocks')) || [],
                     editingIndex: -1
@@ -111,7 +124,7 @@
                     localStorage.setItem('stocks', JSON.stringify(this.stocks));
                 },
                 addOrUpdateStock() {
-                    const { code, name, quantity, price, currentPrice } = this.newStock;
+                    const { code, name, quantity, price, currentPrice, category } = this.newStock;
                     if (code && name && quantity > 0 && price >= 0.000 && price <= 10000.000) {
                         const value = quantity * price;
                         if (this.editingIndex !== -1) {
@@ -121,7 +134,8 @@
                                 quantity,
                                 price,
                                 currentPrice,
-                                value
+                                value,
+                                category
                             };
                             this.editingIndex = -1;
                         } else {
@@ -131,7 +145,8 @@
                                 quantity,
                                 price,
                                 currentPrice,
-                                value
+                                value,
+                                category
                             });
                         }
                         this.calculatePercentages();
@@ -141,7 +156,8 @@
                             name: '',
                             quantity: 0,
                             price: 0,
-                            currentPrice: 0
+                            currentPrice: 0,
+                            category: 'A股'
                         };
                     }
                 },
@@ -159,7 +175,8 @@
                         name: stock.name,
                         quantity: stock.quantity,
                         price: stock.price,
-                        currentPrice: stock.currentPrice
+                        currentPrice: stock.currentPrice,
+                        category: stock.category || 'A股'
                     };
                 },
                 buyStock(index) {
