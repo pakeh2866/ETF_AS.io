@@ -33,6 +33,12 @@
                     <button @click="importData" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                         导入数据
                     </button>
+                    <button @click="exportToGist" class="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        导出到云端
+                    </button>
+                    <button @click="importFromGist" class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        云端导入
+                    </button>
                 </div>
             </div>
             <table class="w-full table-auto">
@@ -691,6 +697,70 @@
                         this.indexData.splice(idx, 1);
                         localStorage.setItem('indexData', JSON.stringify(this.indexData));
                     }
+                },
+                exportToGist() {
+                    const token = prompt('请输入你的 GitHub Token（只需 gist 权限）');
+                    if (!token) return alert('未输入 Token，无法导出！');
+                    const data = {
+                        stocks: this.stocks,
+                        indexData: this.indexData
+                    };
+                    fetch('https://api.github.com/gists', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'token ' + token,
+                            'Accept': 'application/vnd.github.v3+json'
+                        },
+                        body: JSON.stringify({
+                            description: "股票持仓比例提醒数据",
+                            public: false,
+                            files: {
+                                "portfolio.json": {
+                                    content: JSON.stringify(data, null, 2)
+                                }
+                            }
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.html_url) {
+                            alert('导出成功！Gist 地址：' + res.html_url + '\n请妥善保存此链接，后续可用于云端导入。');
+                        } else {
+                            alert('导出失败：' + (res.message || '未知错误'));
+                        }
+                    })
+                    .catch(err => alert('导出失败：' + err));
+                },
+                importFromGist() {
+                    const gistUrl = prompt('请输入 Gist 的 URL 或 ID');
+                    if (!gistUrl) return;
+                    // 支持直接输入 Gist ID 或完整 URL
+                    let gistId = gistUrl.trim();
+                    if (gistId.includes('/')) {
+                        gistId = gistId.split('/').pop();
+                    }
+                    fetch('https://api.github.com/gists/' + gistId)
+                        .then(res => res.json())
+                        .then(res => {
+                            if (res.files && res.files['portfolio.json']) {
+                                const content = res.files['portfolio.json'].content;
+                                const importedData = JSON.parse(content);
+                                if (importedData.stocks && importedData.indexData) {
+                                    this.stocks = importedData.stocks;
+                                    this.indexData = importedData.indexData;
+                                    this.calculatePercentages();
+                                    this.saveToLocalStorage();
+                                    localStorage.setItem('indexData', JSON.stringify(this.indexData));
+                                    this.renderCategoryChart();
+                                    alert('云端数据导入成功！');
+                                } else {
+                                    alert('Gist 文件内容格式不正确！');
+                                }
+                            } else {
+                                alert('未找到 portfolio.json 文件！');
+                            }
+                        })
+                        .catch(err => alert('导入失败：' + err));
                 }
             },
             mounted() {
