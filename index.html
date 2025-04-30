@@ -170,8 +170,110 @@
             <canvas id="categoryChart" width="150" height="150"></canvas>
         </div>
         <div class="mb-6 bg-white p-6 rounded shadow-md flex flex-col items-center">
-            <h2 class="text-xl font-bold mb-2">品种持仓比例</h2>
+            <h2 class="text-xl font-bold mb-2">品种点位参考</h2>
             <canvas id="productChart" width="150" height="150"></canvas>
+        </div>
+        <div class="w-full overflow-x-auto mt-6">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-lg font-semibold">指数参考</h3>
+                <button @click="addNewIndex" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm">
+                    添加指数
+                </button>
+            </div>
+            <table class="min-w-full table-auto border-collapse">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="border px-4 py-2 text-sm">指数名称</th>
+                        <th class="border px-4 py-2 text-sm">代码</th>
+                        <th class="border px-4 py-2 text-sm">现点位</th>
+                        <th class="border px-4 py-2 text-sm">支撑点位</th>
+                        <th class="border px-4 py-2 text-sm">距离支撑</th>
+                        <th class="border px-4 py-2 text-sm">近两年最低</th>
+                        <th class="border px-4 py-2 text-sm">已反弹</th>
+                        <th class="border px-4 py-2 text-sm">前高</th>
+                        <th class="border px-4 py-2 text-sm">最大跌幅</th>
+                        <th class="border px-4 py-2 text-sm">极度价值</th>
+                        <th class="border px-4 py-2 text-sm">价值区间</th>
+                        <th class="border px-4 py-2 text-sm">正常区间</th>
+                        <th class="border px-4 py-2 text-sm">压力位</th>
+                        <th class="border px-4 py-2 text-sm">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(index, idx) in indexData" :key="index.code">
+                        <td class="border px-4 py-2 text-sm">{{ index.name }}</td>
+                        <td class="border px-4 py-2 text-sm">{{ index.code }}</td>
+                        <td class="border px-4 py-2 text-sm">{{ index.currentLevel }}</td>
+                        <td class="border px-4 py-2 text-sm">{{ index.supportLevel }}</td>
+                        <td class="border px-4 py-2 text-sm">{{ index.distanceToSupport }}%</td>
+                        <td class="border px-4 py-2 text-sm">{{ index.twoYearLow }}</td>
+                        <td class="border px-4 py-2 text-sm">{{ index.bounceRate }}%</td>
+                        <td class="border px-4 py-2 text-sm">{{ index.previousHigh }}</td>
+                        <td class="border px-4 py-2 text-sm">{{ index.maxDropRate }}%</td>
+                        <td class="border px-4 py-2 text-sm">{{ index.extremeValue }}</td>
+                        <td class="border px-4 py-2 text-sm">{{ index.valueRange }}</td>
+                        <td class="border px-4 py-2 text-sm">{{ index.normalRange }}</td>
+                        <td class="border px-4 py-2 text-sm">{{ index.resistanceLevel }}</td>
+                        <td class="border px-4 py-2 text-sm">
+                            <button @click="editIndex(idx)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded text-sm mr-1">修改</button>
+                            <button @click="deleteIndex(idx)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-sm">删除</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div v-if="showIndexEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-3xl mx-4">
+                <h3 class="text-lg font-bold mb-4">{{ isNewIndex ? '添加指数' : '修改指数数据' }}</h3>
+                <form @submit.prevent="saveIndexEdit" class="space-y-4">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">指数名称</label>
+                            <input type="text" v-model="editingIndex.name" class="w-full border rounded px-3 py-2" :readonly="!isNewIndex" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">代码</label>
+                            <input type="text" v-model="editingIndex.code" class="w-full border rounded px-3 py-2" :readonly="!isNewIndex" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">现点位</label>
+                            <input type="number" v-model.number="editingIndex.currentLevel" class="w-full border rounded px-3 py-2" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">支撑点位</label>
+                            <input type="number" v-model.number="editingIndex.supportLevel" class="w-full border rounded px-3 py-2" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">近两年最低</label>
+                            <input type="number" v-model.number="editingIndex.twoYearLow" class="w-full border rounded px-3 py-2" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">前高</label>
+                            <input type="number" v-model.number="editingIndex.previousHigh" class="w-full border rounded px-3 py-2" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">极度价值</label>
+                            <input type="text" v-model="editingIndex.extremeValue" class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">价值区间</label>
+                            <input type="text" v-model="editingIndex.valueRange" class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">正常区间</label>
+                            <input type="text" v-model="editingIndex.normalRange" class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">压力位</label>
+                            <input type="number" v-model.number="editingIndex.resistanceLevel" class="w-full border rounded px-3 py-2">
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-4 mt-6">
+                        <button type="button" @click="closeIndexEdit" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">取消</button>
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">保存</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
     <script>
@@ -193,6 +295,10 @@
                     sortKey: '',
                     sortOrder: '',
                     categoryChart: null,
+                    indexData: [],
+                    showIndexEditModal: false,
+                    editingIndexIdx: -1,
+                    isNewIndex: false
                 };
             },
             methods: {
@@ -495,11 +601,72 @@
                         }
                     });
                 },
+                addNewIndex() {
+                    this.editingIndex = {
+                        name: '',
+                        code: '',
+                        currentLevel: 0,
+                        supportLevel: 0,
+                        distanceToSupport: 0,
+                        twoYearLow: 0,
+                        bounceRate: 0,
+                        previousHigh: 0,
+                        maxDropRate: 0,
+                        extremeValue: '',
+                        valueRange: '',
+                        normalRange: '',
+                        resistanceLevel: 0
+                    };
+                    this.isNewIndex = true;
+                    this.showIndexEditModal = true;
+                },
+                editIndex(idx) {
+                    this.editingIndex = { ...this.indexData[idx] };
+                    this.editingIndexIdx = idx;
+                    this.isNewIndex = false;
+                    this.showIndexEditModal = true;
+                },
+                closeIndexEdit() {
+                    this.showIndexEditModal = false;
+                    this.editingIndex = null;
+                    this.editingIndexIdx = -1;
+                },
+                saveIndexEdit() {
+                    // 基础校验
+                    if (!this.editingIndex.name || !this.editingIndex.code) {
+                        alert('指数名称和代码不能为空！');
+                        return;
+                    }
+                    // 自动计算
+                    const idx = this.editingIndex;
+                    idx.distanceToSupport = ((idx.currentLevel - idx.supportLevel) / idx.supportLevel * 100).toFixed(1);
+                    idx.bounceRate = ((idx.currentLevel - idx.twoYearLow) / idx.twoYearLow * 100).toFixed(1);
+                    idx.maxDropRate = ((idx.currentLevel - idx.previousHigh) / idx.previousHigh * 100).toFixed(1);
+
+                    if (this.isNewIndex) {
+                        this.indexData.push({ ...idx });
+                    } else {
+                        this.indexData[this.editingIndexIdx] = { ...idx };
+                    }
+                    localStorage.setItem('indexData', JSON.stringify(this.indexData));
+                    this.closeIndexEdit();
+                },
+                deleteIndex(idx) {
+                    if (confirm('确定要删除这个指数吗？')) {
+                        this.indexData.splice(idx, 1);
+                        localStorage.setItem('indexData', JSON.stringify(this.indexData));
+                    }
+                }
             },
             mounted() {
                 this.updateStockPrices();
                 this.startAutoUpdate();
                 this.renderCategoryChart();
+                // 加载本地存储
+                const saved = localStorage.getItem('indexData');
+                if (saved) {
+                    this.indexData = JSON.parse(saved);
+                }
             }
         }).mount('#app');
     </script>
