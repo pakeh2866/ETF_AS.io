@@ -233,11 +233,11 @@
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-1">指数名称</label>
-                            <input type="text" v-model="editingIndex.name" class="w-full border rounded px-3 py-2" :readonly="!isNewIndex" required>
+                            <input type="text" v-model="editingIndex.name" class="w-full border rounded px-3 py-2" required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">代码</label>
-                            <input type="text" v-model="editingIndex.code" class="w-full border rounded px-3 py-2" :readonly="!isNewIndex" required>
+                            <input type="text" v-model="editingIndex.code" class="w-full border rounded px-3 py-2" required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">现点位</label>
@@ -431,6 +431,8 @@
                     };
                     input.click();
                 },
+
+                //  更新股票价格函数
                 async updateStockPrices() {
                     try {
                         if (this.stocks.length === 0) {
@@ -514,13 +516,16 @@
                         alert('获取股票数据失败，请稍后重试！\n可能原因：\n1. 网络连接问题\n2. 股票代码格式不正确\n3. 服务器暂时不可用');
                     }
                 },
-                
+ 
+                // 自动更新数据
                 startAutoUpdate() {
                     // 每4小时更新一次数据
                     setInterval(() => {
                         this.updateStockPrices();
                     }, 14400000); // 4小时 = 4 * 60 * 60 * 1000毫秒
                 },
+                
+                //  排序函数
                 sortBy(key) {
                     if (this.sortKey === key) {
                         if (this.sortOrder === '') {
