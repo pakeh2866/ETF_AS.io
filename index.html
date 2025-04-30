@@ -499,6 +499,29 @@
                         this.calculatePercentages();
                         this.saveToLocalStorage();
                         // 保存指数数据到本地
+                        this.indexData.forEach(idx => {
+                            if (
+                                typeof idx.currentLevel === 'number' &&
+                                typeof idx.supportLevel === 'number' &&
+                                idx.supportLevel !== 0
+                            ) {
+                                idx.distanceToSupport = (idx.currentLevel - idx.supportLevel) / idx.supportLevel * 100;
+                            }
+                            if (
+                                typeof idx.currentLevel === 'number' &&
+                                typeof idx.twoYearLow === 'number' &&
+                                idx.twoYearLow !== 0
+                            ) {
+                                idx.bounceRate = (idx.currentLevel - idx.twoYearLow) / idx.twoYearLow * 100;
+                            }
+                            if (
+                                typeof idx.currentLevel === 'number' &&
+                                typeof idx.previousHigh === 'number' &&
+                                idx.previousHigh !== 0
+                            ) {
+                                idx.maxDropRate = (idx.currentLevel - idx.previousHigh) / idx.previousHigh * 100;
+                            }
+                        });
                         localStorage.setItem('indexData', JSON.stringify(this.indexData));
                         this.renderCategoryChart();
                         alert('股票和指数数据更新完成！');
