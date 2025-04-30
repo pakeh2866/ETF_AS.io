@@ -390,13 +390,17 @@
                         alert('卖出数量不能大于持仓数量！');
                     }
                 },
+                // 导出数据
                 exportData() {
-                    const data = JSON.stringify(this.stocks, null, 2);
-                    const blob = new Blob([data], { type: 'application/json' });
+                    const data = {
+                        stocks: this.stocks,
+                        indexData: this.indexData
+                    };
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `stock_portfolio_${new Date().toISOString().split('T')[0]}.json`;
+                    a.download = `portfolio_and_index_${new Date().toISOString().split('T')[0]}.json`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -413,12 +417,21 @@
                             reader.onload = (event) => {
                                 try {
                                     const importedData = JSON.parse(event.target.result);
+                                    // 兼容老格式（只有 stocks 数组）
                                     if (Array.isArray(importedData)) {
                                         this.stocks = importedData;
                                         this.calculatePercentages();
                                         this.saveToLocalStorage();
                                         this.renderCategoryChart();
-                                        alert('数据导入成功！');
+                                        alert('持仓数据导入成功！');
+                                    } else if (importedData.stocks && importedData.indexData) {
+                                        this.stocks = importedData.stocks;
+                                        this.indexData = importedData.indexData;
+                                        this.calculatePercentages();
+                                        this.saveToLocalStorage();
+                                        localStorage.setItem('indexData', JSON.stringify(this.indexData));
+                                        this.renderCategoryChart();
+                                        alert('持仓和指数数据导入成功！');
                                     } else {
                                         alert('导入的数据格式不正确！');
                                     }
