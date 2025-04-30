@@ -546,7 +546,7 @@
                         alert('获取股票数据失败，请稍后重试！\n可能原因：\n1. 网络连接问题\n2. 股票代码格式不正确\n3. 服务器暂时不可用');
                     }
                 },
- 
+
                 // 自动更新数据
                 startAutoUpdate() {
                     // 每4小时更新一次数据
@@ -554,7 +554,7 @@
                         this.updateStockPrices();
                     }, 14400000); // 4小时 = 4 * 60 * 60 * 1000毫秒
                 },
-                
+
                 //  排序函数
                 sortBy(key) {
                     if (this.sortKey === key) {
@@ -596,7 +596,7 @@
                 renderCategoryChart() {
                     const categoryMap = {};
                     const totalValue = this.stocks.reduce((sum, stock) => sum + stock.value, 0);
-                    
+
                     // 计算每个分类的市值和比例
                     this.stocks.forEach(stock => {
                         if (!categoryMap[stock.category]) {
@@ -604,17 +604,17 @@
                         }
                         categoryMap[stock.category] += stock.value;
                     });
-                    
+
                     const categories = Object.keys(categoryMap);
                     const values = Object.values(categoryMap);
                     const colors = [
                         '#4F46E5', '#22D3EE', '#F59E42', '#F43F5E', '#10B981', '#FBBF24', '#6366F1'
                     ];
-                    
+
                     if (this.categoryChart) {
                         this.categoryChart.destroy();
                     }
-                    
+
                     const ctx = document.getElementById('categoryChart').getContext('2d');
                     this.categoryChart = new Chart(ctx, {
                         type: 'doughnut',
@@ -699,8 +699,13 @@
                     }
                 },
                 exportToGist() {
-                    const token = prompt('请输入你的 GitHub Token（只需 gist 权限）');
+                    let token = localStorage.getItem('githubToken') || '';
+                    token = prompt('请输入你的 GitHub Token（只需 gist 权限）', token);
                     if (!token) return alert('未输入 Token，无法导出！');
+
+                    // 将 Token 保存到 localStorage
+                    localStorage.setItem('githubToken', token);
+
                     const data = {
                         stocks: this.stocks,
                         indexData: this.indexData
@@ -778,4 +783,4 @@
 </body>
 
 </html>
-    
+
