@@ -241,7 +241,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">现点位</label>
-                            <input type="number" v-model.number="editingIndex.currentLevel" class="w-full border rounded px-3 py-2" required>
+                            <input type="number" v-model.number="editingIndex.currentLevel" class="w-full border rounded px-3 py-2" required step="0.01">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">支撑点位</label>
@@ -556,6 +556,8 @@
                         }
                     });
                 },
+
+                // 渲染分类图表
                 renderCategoryChart() {
                     const categoryMap = {};
                     const totalValue = this.stocks.reduce((sum, stock) => sum + stock.value, 0);
@@ -641,11 +643,11 @@
                         alert('指数名称和代码不能为空！');
                         return;
                     }
-                    // 自动计算
+                    // 自动计算，存为数字
                     const idx = this.editingIndex;
-                    idx.distanceToSupport = ((idx.currentLevel - idx.supportLevel) / idx.supportLevel * 100).toFixed(1);
-                    idx.bounceRate = ((idx.currentLevel - idx.twoYearLow) / idx.twoYearLow * 100).toFixed(1);
-                    idx.maxDropRate = ((idx.currentLevel - idx.previousHigh) / idx.previousHigh * 100).toFixed(1);
+                    idx.distanceToSupport = (idx.currentLevel - idx.supportLevel) / idx.supportLevel * 100;
+                    idx.bounceRate = (idx.currentLevel - idx.twoYearLow) / idx.twoYearLow * 100;
+                    idx.maxDropRate = (idx.currentLevel - idx.previousHigh) / idx.previousHigh * 100;
 
                     if (this.isNewIndex) {
                         this.indexData.push({ ...idx });
