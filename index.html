@@ -209,11 +209,17 @@
                         <td class="border px-4 py-2 text-sm">{{ index.code }}</td>
                         <td class="border px-4 py-2 text-sm">{{ index.currentLevel }}</td>
                         <td class="border px-4 py-2 text-sm">{{ index.supportLevel }}</td>
-                        <td class="border px-4 py-2 text-sm">{{ index.distanceToSupport }}%</td>
+                        <td class="border px-4 py-2 text-sm">
+                            {{ typeof index.distanceToSupport === 'number' ? index.distanceToSupport.toFixed(2) : '' }}%
+                        </td>
                         <td class="border px-4 py-2 text-sm">{{ index.twoYearLow }}</td>
-                        <td class="border px-4 py-2 text-sm">{{ index.bounceRate }}%</td>
+                        <td class="border px-4 py-2 text-sm">
+                            {{ typeof index.bounceRate === 'number' ? index.bounceRate.toFixed(2) : '' }}%
+                        </td>
                         <td class="border px-4 py-2 text-sm">{{ index.previousHigh }}</td>
-                        <td class="border px-4 py-2 text-sm">{{ index.maxDropRate }}%</td>
+                        <td class="border px-4 py-2 text-sm">
+                            {{ typeof index.maxDropRate === 'number' ? index.maxDropRate.toFixed(2) : '' }}%
+                        </td>
                         <td class="border px-4 py-2 text-sm">{{ index.extremeValue }}</td>
                         <td class="border px-4 py-2 text-sm">{{ index.valueRange }}</td>
                         <td class="border px-4 py-2 text-sm">{{ index.normalRange }}</td>
