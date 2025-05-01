@@ -138,37 +138,41 @@
         </div>
         <div class="bg-white p-6 rounded shadow-md">
             <form @submit.prevent="addOrUpdateStock">
-                <div class="mb-4">
-                    <label for="stockCategory" class="block text-gray-700 font-bold mb-2">分类</label>
-                    <select v-model="newStock.category" id="stockCategory" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        <option value="A股">A股</option>
-                        <option value="港股">港股</option>
-                        <option value="其他海外">其他海外</option>
-                        <option value="国内债">国内债</option>
-                        <option value="黄金">黄金</option>
-                        <option value="石油">石油</option>
-                        <option value="现金">现金</option>
-                    </select>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="mb-4">
+                        <label for="stockCategory" class="block text-gray-700 font-bold mb-2">分类</label>
+                        <select v-model="newStock.category" id="stockCategory" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="A股">A股</option>
+                            <option value="港股">港股</option>
+                            <option value="其他海外">其他海外</option>
+                            <option value="国内债">国内债</option>
+                            <option value="黄金">黄金</option>
+                            <option value="石油">石油</option>
+                            <option value="现金">现金</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="stockCode" class="block text-gray-700 font-bold mb-2">股票代码</label>
+                        <input type="text" v-model="newStock.code" id="stockCode" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入股票代码">
+                    </div>
+                    <div class="mb-4">
+                        <label for="stockName" class="block text-gray-700 font-bold mb-2">股票名称</label>
+                        <input type="text" v-model="newStock.name" id="stockName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入股票名称">
+                    </div>
+                    <div class="mb-4">
+                        <label for="quantity" class="block text-gray-700 font-bold mb-2">持仓数量</label>
+                        <input type="number" v-model="newStock.quantity" id="quantity" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入持仓数量">
+                    </div>
+                    <div class="mb-4">
+                        <label for="price" class="block text-gray-700 font-bold mb-2">持仓价格</label>
+                        <input type="number" v-model="newStock.price" id="price" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入持仓价格" min="0" max="10000" step="0.001">
+                    </div>
+                    <div class="mb-4 flex items-end">
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">
+                            {{ editingIndex!== -1? '保存修改' : '添加股票' }}
+                        </button>
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label for="stockCode" class="block text-gray-700 font-bold mb-2">股票代码</label>
-                    <input type="text" v-model="newStock.code" id="stockCode" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入股票代码">
-                </div>
-                <div class="mb-4">
-                    <label for="stockName" class="block text-gray-700 font-bold mb-2">股票名称</label>
-                    <input type="text" v-model="newStock.name" id="stockName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入股票名称">
-                </div>
-                <div class="mb-4">
-                    <label for="quantity" class="block text-gray-700 font-bold mb-2">持仓数量</label>
-                    <input type="number" v-model="newStock.quantity" id="quantity" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入持仓数量">
-                </div>
-                <div class="mb-4">
-                    <label for="price" class="block text-gray-700 font-bold mb-2">持仓价格</label>
-                    <input type="number" v-model="newStock.price" id="price" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入持仓价格" min="0" max="10000" step="0.001">
-                </div>
-                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    {{ editingIndex!== -1? '保存修改' : '添加股票' }}
-                </button>
             </form>
         </div>
         <div class="mb-6 bg-white p-6 rounded shadow-md flex flex-col items-center">
