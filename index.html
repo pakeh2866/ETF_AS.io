@@ -326,7 +326,8 @@
                     localStorage.setItem('stocks', JSON.stringify(this.stocks));
                 },
                 addOrUpdateStock() {
-                    const { code, name, quantity, price, currentPrice, category } = this.newStock;
+                    const { code, name, quantity, price, category } = this.newStock;
+                    let currentPrice = this.newStock.currentPrice;
                     if (name === '现金') {
                         currentPrice = 1;
                     }
