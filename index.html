@@ -813,24 +813,69 @@
                     const modal = document.createElement('div');
                     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
                     modal.innerHTML = `
-                        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+                        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-3xl">
                             <h3 class="text-lg font-bold mb-4">设置估值区间</h3>
                             <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">低估PE值</label>
-                                    <input type="number" id="lowPE" class="w-full border rounded px-3 py-2" step="0.01" value="${index.lowPE || ''}" placeholder="输入低估PE值">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">中估PE值</label>
-                                    <input type="number" id="midPE" class="w-full border rounded px-3 py-2" step="0.01" value="${index.midPE || ''}" placeholder="输入中估PE值">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">高估PE值</label>
-                                    <input type="number" id="highPE" class="w-full border rounded px-3 py-2" step="0.01" value="${index.highPE || ''}" placeholder="输入高估PE值">
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">低估PE值</label>
+                                        <input type="number" id="lowPE" class="w-full border rounded px-3 py-2" step="0.01" value="${index.lowPE || ''}" placeholder="输入低估PE值">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">中估PE值</label>
+                                        <input type="number" id="midPE" class="w-full border rounded px-3 py-2" step="0.01" value="${index.midPE || ''}" placeholder="输入中估PE值">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">高估PE值</label>
+                                        <input type="number" id="highPE" class="w-full border rounded px-3 py-2" step="0.01" value="${index.highPE || ''}" placeholder="输入高估PE值">
+                                    </div>
                                 </div>
                                 <div class="mt-4">
                                     <p class="text-sm text-gray-600">当前PE: ${currentPE.toFixed(2)}</p>
                                     <p class="text-sm text-gray-600">建议仓位: ${this.calculatePosition(currentPE, index.lowPE, index.midPE, index.highPE)}%</p>
+                                </div>
+                                <div class="mt-4">
+                                    <table class="min-w-full border-collapse border border-gray-300">
+                                        <thead>
+                                            <tr class="bg-gray-100">
+                                                <th class="border px-4 py-2 text-sm">历史PE分位数</th>
+                                                <th class="border px-4 py-2 text-sm">PE值（插值计算）</th>
+                                                <th class="border px-4 py-2 text-sm">估值状态</th>
+                                                <th class="border px-4 py-2 text-sm">建议仓位</th>
+                                                <th class="border px-4 py-2 text-sm">操作信号</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="border px-4 py-2 text-sm">10%</td>
+                                                <td class="border px-4 py-2 text-sm">${index.lowPE || '-'}</td>
+                                                <td class="border px-4 py-2 text-sm bg-green-100">极度低估</td>
+                                                <td class="border px-4 py-2 text-sm">100%</td>
+                                                <td class="border px-4 py-2 text-sm text-green-600">强烈买入</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="border px-4 py-2 text-sm">40%</td>
+                                                <td class="border px-4 py-2 text-sm">${index.midPE || '-'}</td>
+                                                <td class="border px-4 py-2 text-sm bg-yellow-100">合理估值</td>
+                                                <td class="border px-4 py-2 text-sm">50%</td>
+                                                <td class="border px-4 py-2 text-sm text-yellow-600">观望</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="border px-4 py-2 text-sm">70%</td>
+                                                <td class="border px-4 py-2 text-sm">${index.highPE || '-'}</td>
+                                                <td class="border px-4 py-2 text-sm bg-red-100">高估</td>
+                                                <td class="border px-4 py-2 text-sm">5%</td>
+                                                <td class="border px-4 py-2 text-sm text-red-600">卖出</td>
+                                            </tr>
+                                            <tr class="bg-blue-50">
+                                                <td class="border px-4 py-2 text-sm font-bold">当前</td>
+                                                <td class="border px-4 py-2 text-sm font-bold">${currentPE.toFixed(2)}</td>
+                                                <td class="border px-4 py-2 text-sm font-bold" id="currentStatus">计算中...</td>
+                                                <td class="border px-4 py-2 text-sm font-bold" id="currentPosition">计算中...</td>
+                                                <td class="border px-4 py-2 text-sm font-bold" id="currentSignal">计算中...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                             <div class="flex justify-end space-x-4 mt-6">
@@ -856,6 +901,34 @@
                         const highPE = parseFloat(highPEInput.value);
                         const position = this.calculatePosition(currentPE, lowPE, midPE, highPE);
                         modal.querySelector('p:last-child').textContent = `建议仓位: ${position}%`;
+
+                        // 更新当前状态
+                        const currentStatus = modal.querySelector('#currentStatus');
+                        const currentPosition = modal.querySelector('#currentPosition');
+                        const currentSignal = modal.querySelector('#currentSignal');
+
+                        if (currentPE <= lowPE) {
+                            currentStatus.textContent = '极度低估';
+                            currentStatus.className = 'border px-4 py-2 text-sm font-bold bg-green-100';
+                            currentSignal.textContent = '强烈买入';
+                            currentSignal.className = 'border px-4 py-2 text-sm font-bold text-green-600';
+                        } else if (currentPE >= highPE) {
+                            currentStatus.textContent = '高估';
+                            currentStatus.className = 'border px-4 py-2 text-sm font-bold bg-red-100';
+                            currentSignal.textContent = '卖出';
+                            currentSignal.className = 'border px-4 py-2 text-sm font-bold text-red-600';
+                        } else if (currentPE <= midPE) {
+                            currentStatus.textContent = '低估';
+                            currentStatus.className = 'border px-4 py-2 text-sm font-bold bg-yellow-100';
+                            currentSignal.textContent = '买入';
+                            currentSignal.className = 'border px-4 py-2 text-sm font-bold text-yellow-600';
+                        } else {
+                            currentStatus.textContent = '偏高';
+                            currentStatus.className = 'border px-4 py-2 text-sm font-bold bg-orange-100';
+                            currentSignal.textContent = '减仓';
+                            currentSignal.className = 'border px-4 py-2 text-sm font-bold text-orange-600';
+                        }
+                        currentPosition.textContent = `${position}%`;
                     };
 
                     [lowPEInput, midPEInput, highPEInput].forEach(input => {
@@ -890,6 +963,9 @@
                     cancelBtn.addEventListener('click', () => {
                         document.body.removeChild(modal);
                     });
+
+                    // 初始化显示
+                    updateSuggestedPosition();
                 },
 
                 // 计算建议仓位
