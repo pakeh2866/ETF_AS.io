@@ -121,7 +121,7 @@
                 </thead>
                 <tbody>
                     <tr v-for="(stock, index) in getSortedStocks()" :key="index" :class="{ highlight: stock.percentage > 0.15 }">
-                        <td class="border px-4 py-2">{{ stock.category }}</td>
+                        <td class="border px-4 py-2">{{ stock.category.split('-')[0] }}<span class="text-sm text-gray-500 ml-1">{{ stock.category.split('-')[1] || '' }}</span></td>
                         <td class="border px-4 py-2">{{ stock.code }}</td>
                         <td class="border px-4 py-2">{{ stock.name }}</td>
                         <td class="border px-4 py-2">{{ stock.quantity }}</td>
@@ -142,9 +142,18 @@
                     <div class="mb-4">
                         <label for="stockCategory" class="block text-gray-700 font-bold mb-2">分类</label>
                         <select v-model="newStock.category" id="stockCategory" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                            <option value="A股">A股</option>
-                            <option value="港股">港股</option>
-                            <option value="其他海外">其他海外</option>
+                            <optgroup label="A股">
+                                <option value="A股-ETF">ETF</option>
+                                <option value="A股-个股">个股</option>
+                            </optgroup>
+                            <optgroup label="港股">
+                                <option value="港股-ETF">ETF</option>
+                                <option value="港股-个股">个股</option>
+                            </optgroup>
+                            <optgroup label="其他海外">
+                                <option value="其他海外-ETF">ETF</option>
+                                <option value="其他海外-个股">个股</option>
+                            </optgroup>
                             <option value="国内债">国内债</option>
                             <option value="黄金">黄金</option>
                             <option value="石油">石油</option>
@@ -616,12 +625,13 @@
                     const categoryMap = {};
                     const totalValue = this.stocks.reduce((sum, stock) => sum + stock.value, 0);
 
-                    // 计算每个分类的市值和比例
+                    // 计算每个主分类的市值和比例
                     this.stocks.forEach(stock => {
-                        if (!categoryMap[stock.category]) {
-                            categoryMap[stock.category] = 0;
+                        const mainCategory = stock.category.split('-')[0];
+                        if (!categoryMap[mainCategory]) {
+                            categoryMap[mainCategory] = 0;
                         }
-                        categoryMap[stock.category] += stock.value;
+                        categoryMap[mainCategory] += stock.value;
                     });
 
                     const categories = Object.keys(categoryMap);
