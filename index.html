@@ -210,6 +210,7 @@
                         <th class="border px-4 py-2 text-sm">价值区间</th>
                         <th class="border px-4 py-2 text-sm">正常区间</th>
                         <th class="border px-4 py-2 text-sm">压力位</th>
+                        <th class="border px-4 py-2 text-sm">市盈率</th>
                         <th class="border px-4 py-2 text-sm">操作</th>
                     </tr>
                 </thead>
@@ -234,6 +235,7 @@
                         <td class="border px-4 py-2 text-sm" :class="{ 'bg-green-100': index.currentLevel > parseFloat(index.valueRange) }">{{ index.valueRange }}</td>
                         <td class="border px-4 py-2 text-sm">{{ index.normalRange }}</td>
                         <td class="border px-4 py-2 text-sm" :class="{ 'bg-red-200': index.currentLevel > parseFloat(index.resistanceLevel) }">{{ index.resistanceLevel }}</td>
+                        <td class="border px-4 py-2 text-sm">{{ index.peRatio || '-' }}</td>
                         <td class="border px-4 py-2 text-sm">
                             <button @click="editIndex(idx)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded text-sm mr-1">修改</button>
                             <button @click="deleteIndex(idx)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-sm">删除</button>
