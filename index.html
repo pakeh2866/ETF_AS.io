@@ -854,18 +854,67 @@
                                                 <td class="border px-4 py-2 text-sm text-green-600">强烈买入</td>
                                             </tr>
                                             <tr>
+                                                <td class="border px-4 py-2 text-sm">20%</td>
+                                                <td class="border px-4 py-2 text-sm">${index.lowPE || '-'}</td>
+                                                <td class="border px-4 py-2 text-sm bg-green-100">极度低估</td>
+                                                <td class="border px-4 py-2 text-sm">90%</td>
+                                                <td class="border px-4 py-2 text-sm text-green-600">买入</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="border px-4 py-2 text-sm">30%</td>
+                                                <td class="border px-4 py-2 text-sm">${index.lowPE || '-'}</td>
+                                                <td class="border px-4 py-2 text-sm bg-green-100">低估</td>
+                                                <td class="border px-4 py-2 text-sm">80%</td>
+                                                <td class="border px-4 py-2 text-sm text-green-600">买入</td>
+                                            </tr>
+                                            <tr>
                                                 <td class="border px-4 py-2 text-sm">40%</td>
+                                                <td class="border px-4 py-2 text-sm">${index.lowPE || '-'}</td>
+                                                <td class="border px-4 py-2 text-sm bg-yellow-100">偏低</td>
+                                                <td class="border px-4 py-2 text-sm">70%</td>
+                                                <td class="border px-4 py-2 text-sm text-yellow-600">观望</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="border px-4 py-2 text-sm">50%</td>
                                                 <td class="border px-4 py-2 text-sm">${index.midPE || '-'}</td>
                                                 <td class="border px-4 py-2 text-sm bg-yellow-100">合理估值</td>
                                                 <td class="border px-4 py-2 text-sm">50%</td>
                                                 <td class="border px-4 py-2 text-sm text-yellow-600">观望</td>
                                             </tr>
                                             <tr>
+                                                <td class="border px-4 py-2 text-sm">60%</td>
+                                                <td class="border px-4 py-2 text-sm">${index.midPE || '-'}</td>
+                                                <td class="border px-4 py-2 text-sm bg-orange-100">偏高</td>
+                                                <td class="border px-4 py-2 text-sm">30%</td>
+                                                <td class="border px-4 py-2 text-sm text-orange-600">减仓</td>
+                                            </tr>
+                                            <tr>
                                                 <td class="border px-4 py-2 text-sm">70%</td>
                                                 <td class="border px-4 py-2 text-sm">${index.highPE || '-'}</td>
-                                                <td class="border px-4 py-2 text-sm bg-red-100">高估</td>
+                                                <td class="border px-4 py-2 text-sm bg-orange-100">高估</td>
+                                                <td class="border px-4 py-2 text-sm">20%</td>
+                                                <td class="border px-4 py-2 text-sm text-orange-600">减仓</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="border px-4 py-2 text-sm">80%</td>
+                                                <td class="border px-4 py-2 text-sm">${index.highPE || '-'}</td>
+                                                <td class="border px-4 py-2 text-sm bg-red-100">严重高估</td>
+                                                <td class="border px-4 py-2 text-sm">10%</td>
+                                                <td class="border px-4 py-2 text-sm text-red-600">卖出</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="border px-4 py-2 text-sm">90%</td>
+                                                <td class="border px-4 py-2 text-sm">${index.highPE || '-'}</td>
+                                                <td class="border px-4 py-2 text-sm bg-red-100">严重高估</td>
                                                 <td class="border px-4 py-2 text-sm">5%</td>
                                                 <td class="border px-4 py-2 text-sm text-red-600">卖出</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="border px-4 py-2 text-sm">100%</td>
+                                                <td class="border px-4 py-2 text-sm">${index.highPE || '-'}</td>
+                                                <td class="border px-4 py-2 text-sm bg-red-100">极度高估</td>
+                                                <td class="border px-4 py-2 text-sm">0%</td>
+                                                <td class="border px-4 py-2 text-sm text-red-600">清仓</td>
                                             </tr>
                                             <tr class="bg-blue-50">
                                                 <td class="border px-4 py-2 text-sm font-bold">当前</td>
@@ -975,23 +1024,28 @@
                     // 计算PE分位数
                     let percentile;
                     if (currentPE <= lowPE) {
-                        percentile = 10; // 低估区域，对应100%仓位
+                        percentile = 10; // 极度低估，100%仓位
                     } else if (currentPE >= highPE) {
-                        percentile = 70; // 高估区域，对应5%仓位
+                        percentile = 90; // 极度高估，0%仓位
                     } else if (currentPE <= midPE) {
                         // 低估到中估之间，线性插值
-                        percentile = 10 + (currentPE - lowPE) / (midPE - lowPE) * 30;
+                        percentile = 10 + (currentPE - lowPE) / (midPE - lowPE) * 40;
                     } else {
                         // 中估到高估之间，线性插值
-                        percentile = 40 + (currentPE - midPE) / (highPE - midPE) * 30;
+                        percentile = 50 + (currentPE - midPE) / (highPE - midPE) * 40;
                     }
 
                     // 根据分位数计算仓位
                     if (percentile <= 10) return 100;
-                    if (percentile >= 70) return 5;
-                    
-                    // 10%-70%之间，线性插值计算仓位
-                    return Math.round(100 - (percentile - 10) * (95 / 60));
+                    if (percentile <= 20) return 90;
+                    if (percentile <= 30) return 80;
+                    if (percentile <= 40) return 70;
+                    if (percentile <= 50) return 50;
+                    if (percentile <= 60) return 30;
+                    if (percentile <= 70) return 20;
+                    if (percentile <= 80) return 10;
+                    if (percentile <= 90) return 5;
+                    return 0;
                 }
             },
             mounted() {
