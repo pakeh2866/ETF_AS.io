@@ -219,7 +219,8 @@
                         <th class="border px-4 py-2 text-sm">价值区间</th>
                         <th class="border px-4 py-2 text-sm">正常区间</th>
                         <th class="border px-4 py-2 text-sm">压力位</th>
-                        <th class="border px-4 py-2 text-sm">市盈率</th>
+                        <th class="border px-4 py-2 text-sm">现市盈率</th>
+                        <th class="border px-4 py-2 text-sm">建议仓位</th>
                         <th class="border px-4 py-2 text-sm">操作</th>
                     </tr>
                 </thead>
@@ -245,6 +246,10 @@
                         <td class="border px-4 py-2 text-sm">{{ index.normalRange }}</td>
                         <td class="border px-4 py-2 text-sm" :class="{ 'bg-red-200': index.currentLevel > parseFloat(index.resistanceLevel) }">{{ index.resistanceLevel }}</td>
                         <td class="border px-4 py-2 text-sm">{{ index.peRatio || '-' }}</td>
+                        <td class="border px-4 py-2 text-sm">
+                            {{ index.suggestedPosition || '-' }}
+                            <button @click="editSuggestedPosition(idx)" class="ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm">修改</button>
+                        </td>
                         <td class="border px-4 py-2 text-sm">
                             <button @click="editIndex(idx)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded text-sm mr-1">修改</button>
                             <button @click="deleteIndex(idx)" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-sm">删除</button>
@@ -795,6 +800,122 @@
                             }
                         })
                         .catch(err => alert('导入失败：' + err));
+                },
+                editSuggestedPosition(idx) {
+                    const index = this.indexData[idx];
+                    const currentPE = parseFloat(index.peRatio);
+                    if (!currentPE) {
+                        alert('当前PE数据不可用，请先更新行情数据！');
+                        return;
+                    }
+
+                    // 创建模态对话框
+                    const modal = document.createElement('div');
+                    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                    modal.innerHTML = `
+                        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+                            <h3 class="text-lg font-bold mb-4">设置估值区间</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">低估PE值</label>
+                                    <input type="number" id="lowPE" class="w-full border rounded px-3 py-2" step="0.01" value="${index.lowPE || ''}" placeholder="输入低估PE值">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">中估PE值</label>
+                                    <input type="number" id="midPE" class="w-full border rounded px-3 py-2" step="0.01" value="${index.midPE || ''}" placeholder="输入中估PE值">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">高估PE值</label>
+                                    <input type="number" id="highPE" class="w-full border rounded px-3 py-2" step="0.01" value="${index.highPE || ''}" placeholder="输入高估PE值">
+                                </div>
+                                <div class="mt-4">
+                                    <p class="text-sm text-gray-600">当前PE: ${currentPE.toFixed(2)}</p>
+                                    <p class="text-sm text-gray-600">建议仓位: ${this.calculatePosition(currentPE, index.lowPE, index.midPE, index.highPE)}%</p>
+                                </div>
+                            </div>
+                            <div class="flex justify-end space-x-4 mt-6">
+                                <button id="cancelBtn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">取消</button>
+                                <button id="saveBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">保存</button>
+                            </div>
+                        </div>
+                    `;
+
+                    document.body.appendChild(modal);
+
+                    // 添加事件监听
+                    const lowPEInput = modal.querySelector('#lowPE');
+                    const midPEInput = modal.querySelector('#midPE');
+                    const highPEInput = modal.querySelector('#highPE');
+                    const cancelBtn = modal.querySelector('#cancelBtn');
+                    const saveBtn = modal.querySelector('#saveBtn');
+
+                    // 实时计算建议仓位
+                    const updateSuggestedPosition = () => {
+                        const lowPE = parseFloat(lowPEInput.value);
+                        const midPE = parseFloat(midPEInput.value);
+                        const highPE = parseFloat(highPEInput.value);
+                        const position = this.calculatePosition(currentPE, lowPE, midPE, highPE);
+                        modal.querySelector('p:last-child').textContent = `建议仓位: ${position}%`;
+                    };
+
+                    [lowPEInput, midPEInput, highPEInput].forEach(input => {
+                        input.addEventListener('input', updateSuggestedPosition);
+                    });
+
+                    // 保存按钮事件
+                    saveBtn.addEventListener('click', () => {
+                        const lowPE = parseFloat(lowPEInput.value);
+                        const midPE = parseFloat(midPEInput.value);
+                        const highPE = parseFloat(highPEInput.value);
+
+                        if (isNaN(lowPE) || isNaN(midPE) || isNaN(highPE)) {
+                            alert('请输入有效的PE值！');
+                            return;
+                        }
+
+                        if (lowPE >= midPE || midPE >= highPE) {
+                            alert('PE值必须满足：低估 < 中估 < 高估！');
+                            return;
+                        }
+
+                        index.lowPE = lowPE;
+                        index.midPE = midPE;
+                        index.highPE = highPE;
+                        index.suggestedPosition = this.calculatePosition(currentPE, lowPE, midPE, highPE).toFixed(2) + '%';
+                        localStorage.setItem('indexData', JSON.stringify(this.indexData));
+                        document.body.removeChild(modal);
+                    });
+
+                    // 取消按钮事件
+                    cancelBtn.addEventListener('click', () => {
+                        document.body.removeChild(modal);
+                    });
+                },
+
+                // 计算建议仓位
+                calculatePosition(currentPE, lowPE, midPE, highPE) {
+                    if (!currentPE || !lowPE || !midPE || !highPE) return 0;
+                    
+                    // 计算PE分位数
+                    let percentile;
+                    if (currentPE <= lowPE) {
+                        percentile = 10; // 低估区域，对应100%仓位
+                    } else if (currentPE >= highPE) {
+                        percentile = 70; // 高估区域，对应5%仓位
+                    } else if (currentPE <= midPE) {
+                        // 低估到中估之间，线性插值
+                        percentile = 10 + (currentPE - lowPE) / (midPE - lowPE) * 30;
+                    } else {
+                        // 中估到高估之间，线性插值
+                        percentile = 40 + (currentPE - midPE) / (highPE - midPE) * 30;
+                    }
+
+                    // 根据分位数计算仓位
+                    if (percentile <= 10) return 100;
+                    if (percentile >= 70) return 5;
+                    
+                    // 10%-70%之间，线性插值计算仓位
+                    return Math.round(100 - (percentile - 10) * (95 / 60));
                 }
             },
             mounted() {
