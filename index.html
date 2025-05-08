@@ -505,6 +505,18 @@
                                 const idx = this.indexData.find(i => i.code === code);
                                 if (idx && !isNaN(currentPrice)) {
                                     idx.currentLevel = currentPrice;
+                                    // 获取市盈率
+                                    console.log('处理指数:', idx.code, '字段数据:', fields);
+                                    // 使用腾讯接口获取市盈率
+                                    const peField = fields[39]; // 腾讯接口的市盈率字段
+                                    console.log('peField:', peField);
+                                    if (peField && peField !== '-') {
+                                        idx.peRatio = parseFloat(peField);
+                                        console.log('设置市盈率:', idx.peRatio);
+                                    } else {
+                                        idx.peRatio = null;
+                                        console.log('市盈率数据无效');
+                                    }
                                 }
                             }
                         });
