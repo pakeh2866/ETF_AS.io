@@ -116,6 +116,7 @@
                             </span>
                             <span v-else>◇</span>
                         </th>
+                        <th class="px-4 py-2">建议仓位</th>
                         <th class="px-4 py-2">操作</th>
                     </tr>
                 </thead>
@@ -129,6 +130,12 @@
                         <td class="border px-4 py-2">{{ stock.currentPrice }}</td>
                         <td class="border px-4 py-2">{{ stock.value.toFixed(2) }} </td>
                         <td class="border px-4 py-2">{{ (stock.percentage * 100).toFixed(2) }}%</td>
+                        <td class="border px-4 py-2">
+                            <template v-if="stock.category.includes('ETF') || stock.category.includes('个股')">
+                                {{ getSuggestedPosition(stock) }}
+                            </template>
+                            <template v-else>-</template>
+                        </td>
                         <td class="border px-4 py-2">
                             <button @click="editStock(stock)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">修改</button>
                         </td>
@@ -175,6 +182,14 @@
                     <div class="mb-4">
                         <label for="price" class="block text-gray-700 font-bold mb-2">持仓价格</label>
                         <input type="number" v-model="newStock.price" id="price" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入持仓价格" min="0" max="10000" step="0.001">
+                    </div>
+                    <div class="mb-4">
+                        <label for="peRatio" class="block text-gray-700 font-bold mb-2">当前PE</label>
+                        <input type="number" v-model="newStock.peRatio" id="peRatio" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入当前PE" min="0" max="100" step="0.01">
+                    </div>
+                    <div class="mb-4">
+                        <label for="pePercentiles" class="block text-gray-700 font-bold mb-2">PE分位数</label>
+                        <input type="text" v-model="newStock.pePercentiles" id="pePercentiles" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="输入PE分位数">
                     </div>
                     <div class="mb-4 flex items-end">
                         <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">
@@ -324,7 +339,9 @@
                         quantity: 0,
                         price: 0,
                         currentPrice: 0,
-                        category: 'A股'
+                        category: 'A股',
+                        peRatio: 0,
+                        pePercentiles: ''
                     },
                     stocks: JSON.parse(localStorage.getItem('stocks')) || [],
                     editingIndex: -1,
@@ -342,7 +359,7 @@
                     localStorage.setItem('stocks', JSON.stringify(this.stocks));
                 },
                 addOrUpdateStock() {
-                    const { code, name, quantity, price, category } = this.newStock;
+                    const { code, name, quantity, price, category, peRatio, pePercentiles } = this.newStock;
                     let currentPrice = this.newStock.currentPrice;
                     if (name === '现金') {
                         currentPrice = 1;
@@ -357,7 +374,9 @@
                                 price,
                                 currentPrice,
                                 value,
-                                category
+                                category,
+                                peRatio,
+                                pePercentiles
                             };
                             this.editingIndex = -1;
                         } else {
@@ -368,7 +387,9 @@
                                 price,
                                 currentPrice,
                                 value,
-                                category
+                                category,
+                                peRatio,
+                                pePercentiles
                             });
                         }
                         this.calculatePercentages();
@@ -380,7 +401,9 @@
                             quantity: 0,
                             price: 0,
                             currentPrice: 0,
-                            category: 'A股'
+                            category: 'A股',
+                            peRatio: 0,
+                            pePercentiles: ''
                         };
                     }
                 },
@@ -398,7 +421,9 @@
                         quantity: stock.quantity,
                         price: stock.price,
                         currentPrice: stock.currentPrice,
-                        category: stock.category || 'A股'
+                        category: stock.category || 'A股',
+                        peRatio: stock.peRatio || 0,
+                        pePercentiles: stock.pePercentiles || ''
                     };
                 },
                 buyStock(index) {
@@ -801,6 +826,8 @@
                         })
                         .catch(err => alert('导入失败：' + err));
                 },
+
+                
                 editSuggestedPosition(idx) {
                     const index = this.indexData[idx];
                     const currentPE = parseFloat(index.peRatio);
@@ -867,7 +894,7 @@
                         }
 
                         const percentiles = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
-                        const positions = [100, 90, 80, 70, 50, 30, 20, 10, 5, 0, 0];
+                        const positions = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0];
                         const statuses = ['极度低估', '极度低估', '低估', '低估', '偏低', '合理估值', '偏高', '高估', '严重高估', '严重高估', '极度高估'];
                         const signals = ['强烈买入', '买入', '买入', '买入', '观望', '观望', '减仓', '减仓', '卖出', '卖出', '清仓'];
                         const bgColors = ['bg-green-100', 'bg-green-100', 'bg-green-100', 'bg-green-100', 'bg-yellow-100', 'bg-yellow-100', 'bg-orange-100', 'bg-orange-100', 'bg-red-100', 'bg-red-100', 'bg-red-100'];
@@ -981,12 +1008,26 @@
                             const position = (currentPE - pePercentiles[i]) / range;
                             
                             // 根据分位数计算仓位
-                            const positions = [100, 90, 80, 70, 50, 30, 20, 10, 5, 0, 0];
+                            const positions = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0];
                             return Math.round(positions[i] + (positions[i + 1] - positions[i]) * position);
                         }
                     }
                     
                     return 0;
+                },
+
+                getSuggestedPosition(stock) {
+                    // 查找对应的指数（通过名称匹配）
+                    const index = this.indexData.find(idx => idx.name === stock.name);
+                    if (index && index.suggestedPosition) {
+                        // 从建议仓位字符串中提取数字（去掉%符号）
+                        const suggestedPosition = parseFloat(index.suggestedPosition);
+                        if (!isNaN(suggestedPosition)) {
+                            // 将建议仓位乘以10%
+                            return (suggestedPosition * 0.1).toFixed(2) + '%';
+                        }
+                    }
+                    return '-';
                 }
             },
             mounted() {
