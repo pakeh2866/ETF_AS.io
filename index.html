@@ -130,12 +130,7 @@
                         <td class="border px-4 py-2">{{ stock.currentPrice }}</td>
                         <td class="border px-4 py-2">{{ stock.value.toFixed(2) }} </td>
                         <td class="border px-4 py-2">{{ (stock.percentage * 100).toFixed(2) }}%</td>
-                        <td class="border px-4 py-2">
-                            <template v-if="stock.category.includes('ETF') || stock.category.includes('个股')">
-                                {{ getSuggestedPosition(stock) }}
-                            </template>
-                            <template v-else>-</template>
-                        </td>
+                        <td class="border px-4 py-2" v-text="getSuggestedPosition(stock)"></td>
                         <td class="border px-4 py-2">
                             <button @click="editStock(stock)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">修改</button>
                         </td>
@@ -1018,27 +1013,40 @@
 
                 getSuggestedPosition(stock) {
                     // 查找对应的指数（通过名称匹配）
+                    console.log('当前股票:', stock.name);
+                    console.log('所有指数:', this.indexData);
                     const index = this.indexData.find(idx => idx.name === stock.name);
+                    console.log('找到的指数:', index);
                     if (index && index.suggestedPosition) {
                         // 从建议仓位字符串中提取数字（去掉%符号）
                         const suggestedPosition = parseFloat(index.suggestedPosition);
+                        console.log('建议仓位原始值:', index.suggestedPosition);
+                        console.log('解析后的建议仓位:', suggestedPosition);
                         if (!isNaN(suggestedPosition)) {
                             // 将建议仓位乘以10%
-                            return (suggestedPosition * 0.1).toFixed(2) + '%';
+                            const finalPosition = (suggestedPosition * 0.1).toFixed(2) + '%';
+                            console.log('最终建议仓位:', finalPosition);
+                            return finalPosition;
                         }
                     }
                     return '-';
                 }
             },
             mounted() {
+                // 加载本地存储的指数数据
+                const savedIndexData = localStorage.getItem('indexData');
+                if (savedIndexData) {
+                    try {
+                        this.indexData = JSON.parse(savedIndexData);
+                        console.log('加载的指数数据:', this.indexData);
+                    } catch (e) {
+                        console.error('解析指数数据失败:', e);
+                    }
+                }
+
                 this.updateStockPrices();
                 this.startAutoUpdate();
                 this.renderCategoryChart();
-                // 加载本地存储
-                const saved = localStorage.getItem('indexData');
-                if (saved) {
-                    this.indexData = JSON.parse(saved);
-                }
             }
         }).mount('#app');
     </script>
