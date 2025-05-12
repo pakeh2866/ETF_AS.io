@@ -506,6 +506,7 @@
                         const indexCodes = this.indexData.map(idx => idx.code.trim());
                         // 合并去重
                         const allCodes = Array.from(new Set([...stockCodes, ...indexCodes])).filter(Boolean);
+                        console.log('allCodes:', allCodes);
                         if (allCodes.length === 0) {
                             console.log('没有有效的股票或指数代码可供查询。');
                             return;
@@ -518,25 +519,25 @@
 
                         // 3. 解析返回数据
                         const individualStockData = text.trim().split(';').filter(s => s.length > 0);
-
+                        console.log('individualStockData:', individualStockData);
                         individualStockData.forEach(stockStr => {
-                            const stockCodeWithPrefixMatch = stockStr.match(/v_([a-z]{2}\d+)=/);
-                            if (!stockCodeWithPrefixMatch) return;
-                            const code = stockCodeWithPrefixMatch[1];
+                            // 直接使用 stockStr，不需要正则匹配
                             const fields = stockStr.split('~');
+                            console.log('fields:', fields);
                             if (fields.length > 3) {
                                 const currentPriceStr = fields[3];
                                 const currentPrice = parseFloat(currentPriceStr);
+                                const code = fields[2]; // 股票代码在第三个字段
 
                                 // 4. 更新持仓股票
-                                const stock = this.stocks.find(s => s.code === code);
+                                const stock = this.stocks.find(s => s.code.includes(code));
                                 if (stock && !isNaN(currentPrice)) {
                                     stock.currentPrice = currentPrice;
                                     stock.value = stock.quantity * currentPrice;
                                 }
 
                                 // 5. 更新指数点位
-                                const idx = this.indexData.find(i => i.code === code);
+                                const idx = this.indexData.find(i => i.code.includes(code));
                                 if (idx && !isNaN(currentPrice)) {
                                     idx.currentLevel = currentPrice;
                                     // 获取市盈率
