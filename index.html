@@ -130,7 +130,12 @@
                         <td class="border px-4 py-2">{{ stock.currentPrice }}</td>
                         <td class="border px-4 py-2">{{ stock.value.toFixed(2) }} </td>
                         <td class="border px-4 py-2">{{ (stock.percentage * 100).toFixed(2) }}%</td>
-                        <td class="border px-4 py-2" v-text="getSuggestedPosition(stock)"></td>
+                        <td
+                          class="border px-4 py-2"
+                          :class="{ 'bg-yellow-200': shouldHighlightStockSuggestedPosition(stock) }"
+                        >
+                          {{ getSuggestedPosition(stock) }}
+                        </td>
                         <td class="border px-4 py-2">
                             <button @click="editStock(stock)" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline">修改</button>
                         </td>
@@ -354,7 +359,7 @@
                         currentPrice = 1;
                     }
                     if (code && name && quantity > 0 && price >= 0.000 && price <= 10000.000) {
-                        const value = quantity * price;
+                        const value = quantity * currentPrice;
                         if (this.editingIndex !== -1) {
                             this.stocks[this.editingIndex] = {
                                 code,
@@ -1019,12 +1024,31 @@
                         console.log('解析后的建议仓位:', suggestedPosition);
                         if (!isNaN(suggestedPosition)) {
                             // 将建议仓位乘以10%
-                            const finalPosition = (suggestedPosition * 0.1).toFixed(2) + '%';
+                            const finalPosition = (suggestedPosition * 0.10).toFixed(2) + '%';
                             console.log('最终建议仓位:', finalPosition);
                             return finalPosition;
                         }
                     }
                     return '-';
+                },
+
+                shouldHighlightStockSuggestedPosition(stock) {
+                    // 获取建议仓位（去掉%并转为数字）
+                    const index = this.indexData.find(idx => idx.name === stock.name);
+                    if (!index || !index.suggestedPosition) return false;
+                    const suggest = parseFloat(index.suggestedPosition);
+                    if (isNaN(suggest)) return false;
+
+                    // 获取实际持仓比例（百分比数值）
+                    const holdPercent = (stock.percentage || 0) * 100;
+
+                    // 输出调试信息
+                    console.log(
+                        `股票: ${stock.name}, 建议仓位: ${suggest}%, 实际持仓: ${holdPercent}%, 差值: ${Math.abs(suggest - holdPercent)}`
+                    );
+
+                    // 差值大于等于3%则高亮
+                    return Math.abs(suggest - holdPercent) >= 3;
                 }
             },
             mounted() {
