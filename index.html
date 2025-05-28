@@ -252,8 +252,8 @@
                             {{ typeof index.maxDropRate === 'number' ? index.maxDropRate.toFixed(2) : '' }}%
                         </td>
                         <td class="border px-4 py-2 text-sm" :class="{ 'bg-green-200': index.currentLevel <= parseFloat(index.extremeValue) }">{{ index.extremeValue }}</td>
-                        <td class="border px-4 py-2 text-sm" :class="{ 'bg-green-100': index.currentLevel > parseFloat(index.valueRangeLower) }">{{ index.valueRangeLower }}</td>
-                        <td class="border px-4 py-2 text-sm" :class="{ 'bg-green-100': index.currentLevel > parseFloat(index.valueRangeUpper) }">{{ index.valueRangeUpper }}</td>
+                        <td class="border px-4 py-2 text-sm" :class="{ 'bg-green-100': index.currentLevel >= parseFloat(index.valueRangeLower) && index.currentLevel <= parseFloat(index.valueRangeUpper) }">{{ index.valueRangeLower }}</td>
+                        <td class="border px-4 py-2 text-sm" :class="{ 'bg-green-100': index.currentLevel >= parseFloat(index.valueRangeLower) && index.currentLevel <= parseFloat(index.valueRangeUpper) }">{{ index.valueRangeUpper }}</td>
                         <td class="border px-4 py-2 text-sm">{{ index.normalRange }}</td>
                         <td class="border px-4 py-2 text-sm" :class="{ 'bg-red-200': index.currentLevel > parseFloat(index.resistanceLevel) }">{{ index.resistanceLevel }}</td>
                         <td class="border px-4 py-2 text-sm">{{ index.peRatio || '-' }}</td>
