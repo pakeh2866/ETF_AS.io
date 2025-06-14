@@ -227,7 +227,8 @@
                         <th class="border px-4 py-2 text-sm">极度价值</th>
                         <th class="border px-4 py-2 text-sm">价值区间下沿</th>
                         <th class="border px-4 py-2 text-sm">价值区间上沿</th>
-                        <th class="border px-4 py-2 text-sm">正常区间</th>
+                        <th class="border px-4 py-2 text-sm">正常区间下沿</th>
+                        <th class="border px-4 py-2 text-sm">正常区间上沿</th>
                         <th class="border px-4 py-2 text-sm">压力位</th>
                         <th class="border px-4 py-2 text-sm">现市盈率</th>
                         <th class="border px-4 py-2 text-sm">建议仓位</th>
@@ -254,7 +255,8 @@
                         <td class="border px-4 py-2 text-sm" :class="{ 'bg-green-200': index.currentLevel <= parseFloat(index.extremeValue) }">{{ index.extremeValue }}</td>
                         <td class="border px-4 py-2 text-sm" :class="{ 'bg-green-100': index.currentLevel > parseFloat(index.valueRangeLower) }">{{ index.valueRangeLower }}</td>
                         <td class="border px-4 py-2 text-sm" :class="{ 'bg-green-100': index.currentLevel > parseFloat(index.valueRangeUpper) }">{{ index.valueRangeUpper }}</td>
-                        <td class="border px-4 py-2 text-sm">{{ index.normalRange }}</td>
+                        <td class="border px-4 py-2 text-sm" :class="{ 'bg-green-100': index.currentLevel > parseFloat(index.normalRangeLower) }">{{ index.normalRangeLower }}</td>
+                        <td class="border px-4 py-2 text-sm" :class="{ 'bg-green-100': index.currentLevel > parseFloat(index.normalRangeUpper) }">{{ index.normalRangeUpper }}</td>
                         <td class="border px-4 py-2 text-sm" :class="{ 'bg-red-200': index.currentLevel > parseFloat(index.resistanceLevel) }">{{ index.resistanceLevel }}</td>
                         <td class="border px-4 py-2 text-sm">{{ index.peRatio || '-' }}</td>
                         <td class="border px-4 py-2 text-sm">
@@ -311,8 +313,12 @@
                             <input type="text" v-model="editingIndex.valueRangeUpper" class="w-full border rounded px-3 py-2">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1">正常区间</label>
-                            <input type="text" v-model="editingIndex.normalRange" class="w-full border rounded px-3 py-2">
+                            <label class="block text-sm font-medium mb-1">正常区间下沿</label>
+                            <input type="text" v-model="editingIndex.normalRangeLower" class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">正常区间上沿</label>
+                            <input type="text" v-model="editingIndex.normalRangeUpper" class="w-full border rounded px-3 py-2">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">压力位</label>
@@ -716,7 +722,8 @@
                         extremeValue: '',
                         valueRangeLower: '',
                         valueRangeUpper: '',
-                        normalRange: '',
+                        normalRangeLower: '',
+                        normalRangeUpper: '',
                         resistanceLevel: 0
                     };
                     this.isNewIndex = true;
