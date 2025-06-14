@@ -797,6 +797,8 @@
                     .then(res => res.json())
                     .then(res => {
                         if (res.html_url) {
+                            // 保存 gist URL 到 localStorage
+                            localStorage.setItem('gistUrl', res.html_url);
                             alert('导出成功！Gist 地址：' + res.html_url + '\n请妥善保存此链接，后续可用于云端导入。');
                         } else {
                             alert('导出失败：' + (res.message || '未知错误'));
@@ -805,7 +807,8 @@
                     .catch(err => alert('导出失败：' + err));
                 },
                 importFromGist() {
-                    const gistUrl = prompt('请输入 Gist 的 URL 或 ID');
+                    const savedGistUrl = localStorage.getItem('gistUrl') || '';
+                    const gistUrl = prompt('请输入 Gist 的 URL 或 ID', savedGistUrl);
                     if (!gistUrl) return;
                     // 支持直接输入 Gist ID 或完整 URL
                     let gistId = gistUrl.trim();
